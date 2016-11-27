@@ -27,6 +27,13 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:us-east-1:*:*"
+  environment:
+    AWS_KEY: ${file(./env.yml):AWS_KEY}
+    AWS_SECRET: ${file(./env.yml):AWS_SECRET}
+
+package:
+  exclude:
+    - env.yml
 
 # you can overwrite defaults here
 #  stage: dev
@@ -58,14 +65,14 @@ functions:
               method: post
               private: true
 
-  addacookie:
-      handler: handler.addacookie
-      events:
-          - http:
-              path: cookies/add/{UserId}
-              method: get
-              private: true
-              
+  # addacookie:
+  #     handler: handler.addacookie
+  #     events:
+  #         - http:
+  #             path: cookies/add/{UserId}
+  #             method: get
+  #             private: true
+
 # you can add CloudFormation resource templates here
 resources:
   Resources:

@@ -1,94 +1,37 @@
 'use strict';
 'use esversion:6';
 
-let AWS = require('aws-sdk');
-var db = new AWS.DynamoDB.DocumentClient();
+let ddb = require('dynamodb').ddb({ accessKeyId: process.env.AWS_KEY,
+                                    secretAccessKey: process.env.AWS_SECRET });
 
 module.exports.getallcookies = (event, context, callback) => {
-		var params = {
-				TableName: 'CookieTable'
-		};
-
-		db.scan(params, function(err, data) {
-				if (err) callback(err, null);
-				else {
-						const response = {
-								statusCode: 200,
-								body: JSON.stringify(data.Items)
-						};
-						callback(null, response);
-				}
-		});
+	ddb.scan('CookieTable', {}, function(err, res) {
+		if(err) {
+			respond(200, err, callback);
+		} else {
+			respond(200, res.items, callback);
+		}
+	});
 };
 
 module.exports.getcookies = (event, context, callback) => {
-		var params = {
-				TableName: "CookieTable",
-				KeyConditionExpression: "#UserId = :UserId",
-				ExpressionAttributeNames: {
-						"#UserId": "UserId"
-				},
-				ExpressionAttributeValues: {
-						":UserId": event.pathParameters.UserId
-				}
-		};
-
-		db.query(params, (err, data) => {
-				if (err) {
-						const err = {
-								statusCode: 200,
-								body: JSON.stringify({
-										input: event
-								})
-						};
-						callback(err, null);
-				} else {
-						const response = {
-								statusCode: 200,
-								body: JSON.stringify(data.Items)
-						};
-						callback(null, response);
-				}
-		});
+	ddb.query('CookieTable', event.pathParameters.UserId, {}, function(err, res, cap) {
+		if(err) {
+			respond(200, err, callback);
+		} else {
+			respond(200, res.items, callback);
+		}
+	});
 };
 module.exports.setcookies = (event, context, callback) => {
-
-		var params = {
-				TableName: 'CookieTable',
-				Item: JSON.parse(event.body)
-		};
-
-		db.put(params, function(err, data) {
-				if (err) console.log(err);
-				else console.log(data);
-		});
-		const response = {
-				statusCode: 200,
-				body: JSON.stringify({
-						success: true
-				}),
-		};
-		callback(null, response);
+	ddb.putItem('CookieTable', JSON.parse(event.body), {}, function(err, res, cap) {
+		respond(200, { "success": true }, callback);
+	});
 };
 
-module.exports.getcookies = (event, context, callback) => {
-		var params = {
-				TableName: 'CookieTable'
-		};
 
-		db.scan(params, function(err, data) {
-				if (err) callback(err, null);
-				else {
-						const response = {
-								statusCode: 200,
-								body: JSON.stringify(data.Items)
-						};
-						callback(null, response);
-				}
-		});
-};
 
-module.exports.addacookie = (event, context, callback) => {
+/*module.exports.addacookie = (event, context, callback) => {
 	var params = {
 		TableName: "CookieTable",
 			Key: { "UserId": event.pathParameters.UserID },
@@ -97,20 +40,19 @@ module.exports.addacookie = (event, context, callback) => {
 
 		db.update(params, (err, data) => {
 				if (err) {
-						const err = {
-								statusCode: 200,
-								body: JSON.stringify({
-										input: event
-								})
-						};
-						callback(err, null);
+						respond(200, { "input": event }, callback);
 				} else {
-
-						const response = {
-								statusCode: 200,
-								body: JSON.stringify(data)
-						};
-						callback(null, response);
+						respond(200, body, callback);
 				}
 		});
-};
+};*/
+
+
+function respond(code, bodyJSON, callback)
+{
+	const response = {
+			statusCode: code,
+			body: JSON.stringify(bodyJSON)
+	};
+	callback(null, response);
+}
