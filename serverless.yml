@@ -26,19 +26,16 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:us-east-1:*:*"
+      Resource: "arn:aws:dynamodb:us-west-2:*:*"
   environment:
     AWS_KEY: ${file(./env.yml):AWS_KEY}
     AWS_SECRET: ${file(./env.yml):AWS_SECRET}
+  stage: v1
+  region: us-west-2
 
 package:
   exclude:
     - env.yml
-
-# you can overwrite defaults here
-#  stage: dev
-#  region: us-east-1
-
 
 functions:
   getcookies:

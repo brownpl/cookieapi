@@ -1,8 +1,11 @@
 'use strict';
 'use esversion:6';
 
-let ddb = require('dynamodb').ddb({ accessKeyId: process.env.AWS_KEY,
-                                    secretAccessKey: process.env.AWS_SECRET });
+let ddb = require('dynamodb').ddb({
+	accessKeyId: process.env.AWS_KEY,
+	secretAccessKey: process.env.AWS_SECRET,
+	endpoint: 'dynamodb.us-west-2.amazonaws.com'
+});
 
 module.exports.getallcookies = (event, context, callback) => {
 	ddb.scan('CookieTable', {}, function(err, res) {
@@ -15,11 +18,18 @@ module.exports.getallcookies = (event, context, callback) => {
 };
 
 module.exports.getcookies = (event, context, callback) => {
-	ddb.query('CookieTable', event.pathParameters.UserId, {}, function(err, res, cap) {
+	ddb.getItem('CookieTable', event.pathParameters.UserId, null, {}, function(err, res, cap) {
 		if(err) {
 			respond(200, err, callback);
 		} else {
-			respond(200, res.items, callback);
+			if(res)
+			{
+				respond(200, res, callback);
+			}
+			else
+			{
+				respond(200, false, callback);
+			}
 		}
 	});
 };
@@ -29,22 +39,18 @@ module.exports.setcookies = (event, context, callback) => {
 	});
 };
 
-
-
 /*module.exports.addacookie = (event, context, callback) => {
-	var params = {
-		TableName: "CookieTable",
-			Key: { "UserId": event.pathParameters.UserID },
-			UpdateExpression: "SET cookies = :cookies + 1",
-	};
-
-		db.update(params, (err, data) => {
-				if (err) {
-						respond(200, { "input": event }, callback);
-				} else {
-						respond(200, body, callback);
-				}
-		});
+	let UserId = event.pathParameters.UserID;
+	ddb.updateItem('CookieTable', UserId, null, { 'cookies': { value: '', action: 'PUT' } }, {}, function(err, res, cap) {
+		if(err)
+		{
+			respond(200, err, callback);
+		}
+		else
+		{
+			respond(200, res, callback);
+		}
+	});
 };*/
 
 
